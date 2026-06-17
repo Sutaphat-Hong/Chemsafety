@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวิเคราะห์สถิติอุบัติเหตุในโรงงานอุตสาหกรรม (2568 - 2569)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+        }
+        .tab-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20 shadow-inner">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">ระบบประมวลผลและวิเคราะห์อุบัติเหตุในโรงงาน</h1>
+                    <p class="text-xs sm:text-sm text-slate-300">สถิติอุบัติเหตุภาพรวมประเทศ และ เจาะลึกกรณีสารเคมีรั่วไหล ปี 2568 (ม.ค. - ธ.ค. 2568) - 2569 (ม.ค. - พ.ค. 2569)</p>
+                </div>
+            </div>
+            
+            <!-- Global Year Selector -->
+            <div class="bg-slate-800/90 border border-slate-700/80 p-1.5 rounded-xl flex items-center gap-1 shadow-md">
+                <span class="text-xs text-slate-400 px-2 hidden sm:inline">เลือกปีวิเคราะห์:</span>
+                <button onclick="setYear('all')" id="g-btn-all" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow transition-all">รวม 2 ปี</button>
+                <button onclick="setYear('2568')" id="g-btn-2568" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition-all">ปี 2568</button>
+                <button onclick="setYear('2569')" id="g-btn-2569" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition-all">ปี 2569</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <button onclick="switchTab('overview')" id="tab-btn-overview" class="border-b-2 border-indigo-600 text-indigo-600 py-4 px-1 text-sm font-bold flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    1. ภาพรวมอุบัติเหตุทั้งหมด (Overview)
+                </button>
+                <button onclick="switchTab('drilldown')" id="tab-btn-drilldown" class="border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-4 px-1 text-sm font-medium flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                    2. เจาะลึกสารเคมีรั่วไหล (Drill Down)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- ==================== TAB 1: OVERVIEW SCREEN ==================== -->
+        <section id="section-overview" class="tab-transition block">
+            
+            <!-- Overall Stats Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="overview-stats-grid">
+                <!-- Dynamic Stat Cards will be updated here -->
+            </div>
+
+            <!-- Content Area: Chart and Table -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Chart Card (5 columns) -->
+                <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <span class="w-3.5 h-3.5 rounded-full bg-indigo-600"></span>
+                                สัดส่วนประเภทอุบัติภัยในโรงงาน
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">แบ่งตามกลุ่มประเภทอุบัติเหตุหลัก</p>
+                        </div>
+                        <span id="overview-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">รวม 2 ปี (ม.ค. 2568 - พ.ค. 2569)</span>
+                    </div>
+
+                    <div class="chart-container my-auto flex items-center justify-center">
+                        <canvas id="overviewPieChart"></canvas>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <div class="grid grid-cols-2 gap-2 text-xs text-slate-500" id="overview-legend">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table Card (7 columns) -->
+                <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <span class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
+                                ตารางแสดงข้อมูลสถิติอุบัติเหตุภาพรวม
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">คลิกแถว "สารเคมีหกรั่วไหล" หรือปุ่มขวาเพื่อ Drill Down เจาะลึกข้อมูล</p>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                    <th class="py-3.5 px-4 rounded-l-xl">ประเภทอุบัติภัย</th>
+                                    <th class="py-3.5 px-4 text-center">จำนวนครั้ง</th>
+                                    <th class="py-3.5 px-4 text-center">สัดส่วนร้อยละ</th>
+                                    <th class="py-3.5 px-4 rounded-r-xl text-center">การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overview-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-indigo-50/50 font-bold text-slate-900">
+                                    <td class="py-4 px-4 rounded-l-xl">รวมอุบัติเหตุสะสมทั้งหมด</td>
+                                    <td class="py-4 px-4 text-center text-indigo-700" id="overview-total-sum">236 ครั้ง</td>
+                                    <td class="py-4 px-4 text-center">100.0%</td>
+                                    <td class="py-4 px-4 rounded-r-xl text-center text-slate-400">-</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Tip Insight -->
+                    <div class="mt-6 p-4 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-start gap-3">
+                        <span class="text-lg">📢</span>
+                        <div>
+                            <h4 class="font-bold text-indigo-900 text-xs">ข้อสังเกตเชิงลึก (Industrial Safety Insight)</h4>
+                            <p class="text-xs text-indigo-800 leading-relaxed mt-1" id="overview-insight-tip">
+                                อัคคีภัย (Fire) ยังคงเป็นอุบัติภัยที่เกิดขึ้นสูงสุดในภาพรวม (รวม 169 ครั้ง จากอุบัติเหตุทั้งหมด 236 ครั้ง คิดเป็นร้อยละ 71.6) โดยที่สารเคมีหกรั่วไหล (รวม 32 ครั้ง) และอุบัติเหตุจากเครื่องจักร (รวม 25 ครั้ง) ตามมาเป็นอันดับที่ 2 และ 3 ตามลำดับ
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: DRILL DOWN (CHEMICAL) SCREEN ==================== -->
+        <section id="section-drilldown" class="tab-transition hidden">
+            
+            <!-- Quick Back Header -->
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <button onclick="switchTab('overview')" class="hover:text-indigo-600 transition-colors">
+                            ← ภาพรวมอุบัติเหตุ
+                        </button>
+                        <span class="text-slate-400 font-normal">/</span>
+                        <span>เจาะลึกกรณีสารเคมีหกรั่วไหล</span>
+                    </h2>
+                    <p class="text-xs text-slate-500">ข้อมูลสถิติจำแนกตามประเภทสารเคมีที่เกิดรอยรั่วหรือแพร่กระจาย</p>
+                </div>
+                <button onclick="switchTab('overview')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
+                    ย้อนกลับไปหน้าภาพรวม
+                </button>
+            </div>
+
+            <!-- Drill down stats row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">จำนวนเคสสารเคมีรั่วไหลรวม</span>
+                        <h4 class="text-2xl font-bold text-slate-900 mt-1" id="chemical-total-cases">32 ครั้ง</h4>
+                        <p class="text-xs text-slate-500 mt-1">จากเหตุการณ์โรงงานทั้งหมด</p>
+                    </div>
+                    <div class="p-3 bg-rose-50 text-rose-500 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">สารเคมีวิกฤตสูงสุด</span>
+                        <h4 class="text-2xl font-bold text-rose-600 mt-1" id="chemical-peak-name">แอมโมเนีย</h4>
+                        <p class="text-xs text-rose-500 mt-1 font-semibold" id="chemical-peak-ratio">25 ครั้ง (78.1%)</p>
+                    </div>
+                    <div class="p-3 bg-red-50 text-red-500 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">ดัชนีความเสียหายระบุต้นปี 69</span>
+                        <h4 class="text-2xl font-bold text-emerald-600 mt-1">10,000 บาท</h4>
+                        <p class="text-xs text-slate-500 mt-1">เหตุรั่วไหล บมจ.แมน เอ โฟรสเซน ฟู๊ดส์</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 text-emerald-500 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart and Table of Chemical leak -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Chemical Pie Chart (5 cols) -->
+                <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <span class="w-3.5 h-3.5 rounded-full bg-rose-500"></span>
+                                สัดส่วนชนิดสารเคมีที่รั่วไหล
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">แสดงข้อมูลจากการถอดรหัสสาเหตุอุบัติเหตุ</p>
+                        </div>
+                        <span id="chemical-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-700 border border-rose-100">รวม 2 ปี</span>
+                    </div>
+
+                    <div class="chart-container my-auto flex items-center justify-center">
+                        <canvas id="chemicalPieChart"></canvas>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <div class="grid grid-cols-2 gap-2 text-xs text-slate-500" id="chemical-legend">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chemical Data Table (7 cols) -->
+                <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <span class="w-3.5 h-3.5 rounded-full bg-rose-600"></span>
+                                รายละเอียดสถิติอุบัติภัยสารเคมีหกรั่วไหล
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">จำแนกตามประเภทและชื่อสารเคมีเฉพาะ</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                    <th class="py-3.5 px-4 rounded-l-xl">ประเภทสารเคมี</th>
+                                    <th class="py-3.5 px-4 text-center">จำนวน (ครั้ง)</th>
+                                    <th class="py-3.5 px-4 text-center">สัดส่วน %</th>
+                                    <th class="py-3.5 px-4 rounded-r-xl text-center">ความเสี่ยงปีงบประมาณ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chemical-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-rose-50/50 font-bold text-slate-900">
+                                    <td class="py-4 px-4 rounded-l-xl">ยอดรวมอุบัติเหตุสารเคมีรั่วไหล</td>
+                                    <td class="py-4 px-4 text-center text-rose-700" id="chemical-total-sum">32</td>
+                                    <td class="py-4 px-4 text-center">100.0%</td>
+                                    <td class="py-4 px-4 rounded-r-xl text-center text-rose-700">ระดับเฝ้าระวังสูงสุด</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Safety advice -->
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200/50 rounded-xl flex items-start gap-3">
+                        <span class="text-lg">💡</span>
+                        <div>
+                            <h4 class="font-bold text-amber-950 text-xs">คำแนะนำด้านความปลอดภัยทางเคมี (Chemical Safety Guidelines)</h4>
+                            <p class="text-xs text-amber-900 leading-relaxed mt-1" id="chemical-insight-text">
+                                แอมโมเนียยังคงเป็นสารเคมีที่มีอัตราการเกิดเหตุรั่วไหลมากที่สุด (เกือบ 80% ของเคสรั่วไหลทั้งหมด) ส่วนใหญ่เกิดจากระบบทำความเย็นในอุตสาหกรรมห้องเย็นและโรงแช่แข็งสัตว์น้ำ ควรเพิ่มเกณฑ์การตรวจสอบสารทำความเย็นประจำสัปดาห์
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Context Info Section (Varies depending on Year/Tab) -->
+        <div class="mt-8 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="p-1.5 bg-sky-100 text-sky-600 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </span>
+                กรณีวิเคราะห์ข้อมูลสารเคมีและสถิติเปรียบเทียบเชิงลึก (ตรวจสอบตามสถิติจริง)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-600 leading-relaxed">
+                <div>
+                    <h4 class="font-semibold text-slate-900 mb-2">เปรียบเทียบอุบัติเหตุสะสมในภาพรวม (ปี 2568 VS 2569)</h4>
+                    <p class="text-xs" id="footer-analysis-1">
+                        จากภาพรวมความปลอดภัย ปี 2568 (ม.ค. - ธ.ค. 2568) ทั่วประเทศเกิดเหตุขึ้นถึง 173 ครั้ง ในขณะที่ปี 2569 (ม.ค. - พ.ค. 2569) บันทึกสถิติรวมไว้ที่ 63 ครั้ง ซึ่งแนวโน้มสถิติจากเครื่องจักรและอัคคีภัยเริ่มปรับตัวลดลงตามแนวทางควบคุมความปลอดภัยที่เข้มข้นยิ่งขึ้น
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-slate-900 mb-2">การคุมเข้มมาตรการความถี่อุบัติภัย</h4>
+                    <p class="text-xs" id="footer-analysis-2">
+                        แม้สารเคมีหกรั่วไหลจะมีสัดส่วนเฉลี่ยรวมอยู่ที่ประมาณ 13.5% ของเหตุการณ์ทั้งหมด (32 ครั้งจาก 236 ครั้ง) แต่เป็นกรณีที่มีอัตราความเสี่ยงปานกลางถึงสูงมากเนื่องจากสารพิษแพร่กระจาย โดยเฉพาะ "แอมโมเนีย" ที่พบเป็นเปอร์เซ็นต์สูงที่สุดอย่างมีนัยสำคัญ
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-2">ระบบสรุปสาระสำคัญสถิติอุบัติภัยในโรงงานอุตสาหกรรมแห่งประเทศไทย</p>
+            <p>ออกแบบขึ้นใหม่ด้วยระบบ drill down โดยแสดงผลสรุปในรายปีและภาพรวม 2568-2569 อย่างสมบูรณ์</p>
+        </div>
+    </footer>
+
+    <!-- JS Programming Logic -->
+    <script>
+        // --- 1. DATASETS DEFINITION (UPDATED WITH CORRECTED STATS) ---
+        
+        // Year Data: Overall accident types corrected exactly according to user input
+        const overviewData = {
+            "all": [
+                { name: "อัคคีภัย", count: 169, color: "#f59e0b" },
+                { name: "สารเคมีหกรั่วไหล", count: 32, color: "#f43f5e" },
+                { name: "อุบัติเหตุจากเครื่องจักร", count: 25, color: "#3b82f6" },
+                { name: "ระเบิด", count: 2, color: "#e11d48" },
+                { name: "อื่นๆ", count: 8, color: "#64748b" }
+            ],
+            "2568": [
+                { name: "อัคคีภัย", count: 122, color: "#f59e0b" },
+                { name: "สารเคมีหกรั่วไหล", count: 23, color: "#f43f5e" },
+                { name: "อุบัติเหตุจากเครื่องจักร", count: 18, color: "#3b82f6" },
+                { name: "ระเบิด", count: 2, color: "#e11d48" },
+                { name: "อื่นๆ", count: 8, color: "#64748b" }
+            ],
+            "2569": [
+                { name: "อัคคีภัย", count: 47, color: "#f59e0b" },
+                { name: "สารเคมีหกรั่วไหล", count: 9, color: "#f43f5e" },
+                { name: "อุบัติเหตุจากเครื่องจักร", count: 7, color: "#3b82f6" },
+                { name: "ระเบิด", count: 0, color: "#e11d48" },
+                { name: "อื่นๆ", count: 0, color: "#64748b" }
+            ]
+        };
+
+        // Drill Down: Chemical leaked types remains consistent
+        const chemicalData = {
+            "all": [
+                { name: "สารเคมีรั่วไหล (แอมโมเนีย)", count: 25, color: "#ef4444" },
+                { name: "สารเคมีรั่วไหล (ก๊าซไนโตรเจน)", count: 1, color: "#3b82f6" },
+                { name: "สารเคมีรั่วไหล (เอทิลอะซิเตท)", count: 1, color: "#10b981" },
+                { name: "สารเคมีรั่วไหล (น้ำมันดิบรั่วไหล)", count: 1, color: "#f59e0b" },
+                { name: "สารเคมีรั่วไหล (Diesel Re-901J)", count: 1, color: "#06b6d4" },
+                { name: "สารเคมีรั่วไหล (ไนตริก)", count: 1, color: "#8b5cf6" },
+                { name: "สารเคมีรั่วไหล (โพรเพน)", count: 1, color: "#ec4899" },
+                { name: "สารเคมีรั่วไหล (ไฮโดรคาร์บอน) และลุกติดไฟ", count: 1, color: "#6366f1" }
+            ],
+            "2568": [
+                { name: "สารเคมีรั่วไหล (แอมโมเนีย)", count: 18, color: "#ef4444" },
+                { name: "สารเคมีรั่วไหล (น้ำมันดิบรั่วไหล)", count: 1, color: "#f59e0b" },
+                { name: "สารเคมีรั่วไหล (Diesel Re-901J)", count: 1, color: "#06b6d4" },
+                { name: "สารเคมีรั่วไหล (ไนตริก)", count: 1, color: "#8b5cf6" },
+                { name: "สารเคมีรั่วไหล (โพรเพน)", count: 1, color: "#ec4899" },
+                { name: "สารเคมีรั่วไหล (ไฮโดรคาร์บอน) และลุกติดไฟ", count: 1, color: "#6366f1" }
+            ],
+            "2569": [
+                { name: "สารเคมีรั่วไหล (แอมโมเนีย)", count: 7, color: "#ef4444" },
+                { name: "สารเคมีรั่วไหล (ก๊าซไนโตรเจน)", count: 1, color: "#3b82f6" },
+                { name: "สารเคมีรั่วไหล (เอทิลอะซิเตท)", count: 1, color: "#10b981" }
+            ]
+        };
+
+        // --- 2. APP STATE MANAGEMENT ---
+        let currentYear = "all"; // "all", "2568", "2569"
+        let activeTab = "overview"; // "overview", "drilldown"
+        let overviewChart = null;
+        let chemicalChart = null;
+
+        // --- 3. STATE UPDATE LOGIC ---
+        
+        function setYear(year) {
+            currentYear = year;
+            
+            // Toggle Year Button UI State
+            ["all", "2568", "2569"].forEach(yr => {
+                const btn = document.getElementById(`g-btn-${yr}`);
+                if (yr === year) {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow transition-all";
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition-all";
+                }
+            });
+
+            // Re-render everything
+            renderAll();
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+
+            const tabBtnOverview = document.getElementById("tab-btn-overview");
+            const tabBtnDrilldown = document.getElementById("tab-btn-drilldown");
+            const secOverview = document.getElementById("section-overview");
+            const secDrilldown = document.getElementById("section-drilldown");
+
+            if (tabId === 'overview') {
+                tabBtnOverview.className = "border-b-2 border-indigo-600 text-indigo-600 py-4 px-1 text-sm font-bold flex items-center gap-2 transition-all";
+                tabBtnDrilldown.className = "border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-4 px-1 text-sm font-medium flex items-center gap-2 transition-all";
+                secOverview.classList.remove("hidden");
+                secDrilldown.classList.add("hidden");
+            } else {
+                tabBtnOverview.className = "border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-4 px-1 text-sm font-medium flex items-center gap-2 transition-all";
+                tabBtnDrilldown.className = "border-b-2 border-indigo-600 text-indigo-600 py-4 px-1 text-sm font-bold flex items-center gap-2 transition-all";
+                secOverview.classList.add("hidden");
+                secDrilldown.classList.remove("hidden");
+            }
+
+            renderAll();
+        }
+
+        // --- 4. RENDER PROCEDURES ---
+
+        function renderAll() {
+            renderOverviewTab();
+            renderChemicalTab();
+        }
+
+        // Render Overview Screen Components
+        function renderOverviewTab() {
+            const data = overviewData[currentYear];
+            const total = data.reduce((sum, item) => sum + item.count, 0);
+
+            // Update badge text with precise monthly ranges
+            const badge = document.getElementById("overview-badge");
+            badge.innerText = currentYear === 'all' ? 'รวมทั้ง 2 ปี (ม.ค. 2568 - พ.ค. 2569)' : currentYear === '2568' ? 'ปี 2568 (ม.ค. - ธ.ค. 2568)' : 'ปี 2569 (ม.ค. - พ.ค. 2569)';
+
+            // Update Stats Cards dynamically for Overview
+            const statsGrid = document.getElementById("overview-stats-grid");
+            const fireCount = data.find(item => item.name === "อัคคีภัย")?.count || 0;
+            const chemCount = data.find(item => item.name === "สารเคมีหกรั่วไหล")?.count || 0;
+            const machineCount = data.find(item => item.name === "อุบัติเหตุจากเครื่องจักร")?.count || 0;
+            const bombCount = data.find(item => item.name === "ระเบิด")?.count || 0;
+            
+            statsGrid.innerHTML = `
+                <!-- Total Accidents -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">อุบัติเหตุรวมทุกกรณี</span>
+                        <h4 class="text-3xl font-bold text-slate-900 mt-1">${total} ครั้ง</h4>
+                        <p class="text-xs text-slate-500 mt-1">อัคคีภัย สารเคมี เครื่องจักร ระเบิด</p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Fire Accident -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">อัคคีภัย (อันดับ 1)</span>
+                        <h4 class="text-3xl font-bold text-amber-500 mt-1">${fireCount} ครั้ง</h4>
+                        <p class="text-xs text-slate-500 mt-1">สัดส่วนสูงสุดคิดเป็น ${((fireCount/total)*100).toFixed(1)}%</p>
+                    </div>
+                    <div class="p-3 bg-amber-50 text-amber-500 rounded-2xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Chemical leak Accident -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">สารเคมีหกรั่วไหล (อันดับ 2)</span>
+                        <h4 class="text-3xl font-bold text-rose-500 mt-1">${chemCount} ครั้ง</h4>
+                        <p class="text-xs text-rose-500 mt-1 font-semibold hover:underline cursor-pointer" onclick="switchTab('drilldown')">
+                            คลิกเจาะลึกที่นี่ →
+                        </p>
+                    </div>
+                    <div class="p-3 bg-rose-50 text-rose-500 rounded-2xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <!-- Machine Accident -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 block uppercase">อุบัติเหตุจากเครื่องจักร</span>
+                        <h4 class="text-3xl font-bold text-blue-500 mt-1">${machineCount} ครั้ง</h4>
+                        <p class="text-xs text-slate-500 mt-1">อันดับ 3 บาดเจ็บจากการทำงาน</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            `;
+
+            // Draw Overview Table
+            const tbody = document.getElementById("overview-table-body");
+            tbody.innerHTML = "";
+            data.forEach(item => {
+                const percentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : "0.0";
+                
+                let actionBtn = "";
+                if (item.name === "สารเคมีหกรั่วไหล") {
+                    actionBtn = `<button onclick="switchTab('drilldown')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition-colors">Drill Down เจาะลึก 🔍</button>`;
+                } else {
+                    actionBtn = `<span class="text-xs text-slate-400">สถิติทั่วไป</span>`;
+                }
+
+                const row = document.createElement("tr");
+                row.className = "hover:bg-slate-50/60 transition-colors";
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-semibold text-slate-900 flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0 animate-pulse" style="background-color: ${item.color}"></span>
+                        ${item.name}
+                    </td>
+                    <td class="py-4 px-4 text-center font-bold text-slate-800">${item.count} ครั้ง</td>
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <span class="text-xs font-semibold text-slate-600">${percentage}%</span>
+                            <div class="w-12 bg-slate-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
+                                <div class="h-full" style="background-color: ${item.color}; width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 text-center">${actionBtn}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.getElementById("overview-total-sum").innerText = `${total} ครั้ง`;
+
+            // Dynamic Insight Tip Text with precise timeframe
+            const insightTip = document.getElementById("overview-insight-tip");
+            if (currentYear === 'all') {
+                insightTip.innerHTML = "อัคคีภัย (Fire) เป็นอุบัติภัยหลักที่มีจำนวนสูงสุดในภาพรวม (รวม <strong>169 ครั้ง</strong> จาก 236 ครั้ง คิดเป็น <strong>71.6%</strong>) รองลงมาเป็นกลุ่มสารเคมีหกรั่วไหล (รวม <strong>32 ครั้ง</strong>) และอุบัติเหตุจากเครื่องจักร (รวม <strong>25 ครั้ง</strong>) ซึ่งเป็นสัดส่วนที่สอดคล้องกันอย่างมีเสถียรภาพ";
+            } else if (currentYear === '2568') {
+                insightTip.innerHTML = "ในปี 2568 (ข้อมูล ม.ค. - ธ.ค. 2568) มีอุบัติเหตุสะสมทั้งหมด <strong>173 ครั้ง</strong> โดยมีสัดส่วนหลักประกอบด้วย อัคคีภัย 122 ครั้ง, สารเคมีหกรั่วไหล 23 ครั้ง และสถิติเครื่องจักรชำรอยขัดข้องสูงถึง 18 ครั้ง ส่วนอื่น ๆ พบ 8 ครั้ง";
+            } else if (currentYear === '2569') {
+                insightTip.innerHTML = "ในปี 2569 (ข้อมูล ม.ค. - พ.ค. 2569) ข้อมูลสถิติสะสมรวมบันทึกไว้ที่ <strong>63 ครั้ง</strong> โดยลดสถิติการเกิดเหตุระเบิดและสถิติอื่นๆ ลงเป็น 0 ครั้งได้สำเร็จ อัคคีภัยลดลงเหลือ 47 ครั้ง และเกิดสารเคมีหกรั่วไหล 9 ครั้ง";
+            }
+
+            // Draw Overview Pie Chart
+            const ctx = document.getElementById("overviewPieChart").getContext("2d");
+            if (overviewChart) {
+                overviewChart.destroy();
+            }
+
+            const labels = data.map(item => item.name);
+            const values = data.map(item => item.count);
+            const colors = data.map(item => item.color);
+
+            overviewChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
+                                    return ` ${context.label}: ${val} ครั้ง (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update Overview Legend List
+            const legendContainer = document.getElementById("overview-legend");
+            legendContainer.innerHTML = "";
+            data.forEach(item => {
+                if (item.count > 0 || currentYear === 'all') {
+                    const el = document.createElement("div");
+                    el.className = "flex items-center gap-2 truncate";
+                    el.innerHTML = `
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${item.color}"></span>
+                        <span class="truncate">${item.name} (${item.count} ครั้ง)</span>
+                    `;
+                    legendContainer.appendChild(el);
+                }
+            });
+        }
+
+        // Render Chemical Drill Down Components
+        function renderChemicalTab() {
+            const data = chemicalData[currentYear];
+            const total = data.reduce((sum, item) => sum + item.count, 0);
+
+            // Update texts in Tab 2
+            document.getElementById("chemical-total-cases").innerText = `${total} ครั้ง`;
+            document.getElementById("chemical-total-sum").innerText = `${total} ครั้ง`;
+
+            const badge = document.getElementById("chemical-badge");
+            badge.innerText = currentYear === 'all' ? 'รวมทั้ง 2 ปี (ม.ค. 2568 - พ.ค. 2569)' : currentYear === '2568' ? 'เฉพาะปี 2568 (ม.ค. - ธ.ค. 2568)' : 'เฉพาะปี 2569 (ม.ค. - พ.ค. 2569)';
+
+            // Peak chemical identification
+            const peak = [...data].sort((a,b) => b.count - a.count)[0];
+            const peakRatio = total > 0 ? ((peak.count / total) * 100).toFixed(1) : "0.0";
+            document.getElementById("chemical-peak-name").innerText = peak.name.replace("สารเคมีรั่วไหล (", "").replace(")", "");
+            document.getElementById("chemical-peak-ratio").innerText = `${peak.count} ครั้ง (${peakRatio}%)`;
+
+            // Draw Chemical Table
+            const tbody = document.getElementById("chemical-table-body");
+            tbody.innerHTML = "";
+            data.forEach(item => {
+                const percentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : "0.0";
+                
+                let freqBadge = "";
+                if (item.count >= 10) {
+                    freqBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-100">วิกฤตความถี่สูง</span>`;
+                } else if (item.count >= 2) {
+                    freqBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-100">ความถี่ปานกลาง</span>`;
+                } else {
+                    freqBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">พบน้อยรายปี</span>`;
+                }
+
+                const row = document.createElement("tr");
+                row.className = "hover:bg-slate-50/60 transition-colors";
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-semibold text-slate-900 flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${item.color}"></span>
+                        ${item.name}
+                    </td>
+                    <td class="py-4 px-4 text-center font-bold text-slate-800">${item.count}</td>
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <span class="text-xs font-semibold text-slate-600">${percentage}%</span>
+                            <div class="w-12 bg-slate-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
+                                <div class="h-full" style="background-color: ${item.color}; width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 text-center">${freqBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Draw Chemical Pie Chart
+            const ctx = document.getElementById("chemicalPieChart").getContext("2d");
+            if (chemicalChart) {
+                chemicalChart.destroy();
+            }
+
+            const labels = data.map(item => item.name.replace("สารเคมีรั่วไหล (", "").replace(")", ""));
+            const values = data.map(item => item.count);
+            const colors = data.map(item => item.color);
+
+            chemicalChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
+                                    return ` ${context.label}: ${val} ครั้ง (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update Chemical Legend
+            const legendContainer = document.getElementById("chemical-legend");
+            legendContainer.innerHTML = "";
+            const sortedData = [...data].sort((a,b) => b.count - a.count).slice(0, 4);
+            sortedData.forEach(item => {
+                const el = document.createElement("div");
+                el.className = "flex items-center gap-2 truncate";
+                el.innerHTML = `
+                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${item.color}"></span>
+                    <span class="truncate text-xs font-medium">${item.name.replace("สารเคมีรั่วไหล (", "").replace(")", "")} (${item.count} ครั้ง)</span>
+                `;
+                legendContainer.appendChild(el);
+            });
+
+            // Custom Insight Text depending on Year Selection in Drill Down
+            const insightText = document.getElementById("chemical-insight-text");
+            if (currentYear === 'all') {
+                insightText.innerHTML = "<strong>สารแอมโมเนีย</strong> ยังคงเป็นสารเคมีที่มีอัตราการเกิดเหตุรั่วไหลสะสมมากที่สุดถึง <strong>25 ครั้ง (78.1%)</strong> ในขณะที่มีกรณีอื่นๆ เช่น ไนโตรเจน เอทิลอะซิเตท และน้ำมันดิบ เข้ามาเสริมในช่วงสัดส่วนน้อย แนะนำให้เข้มงวดกับโรงงานน้ำแข็งและระบบทำความเย็นจัดส่งท่อ";
+            } else if (currentYear === '2568') {
+                insightText.innerHTML = "ในปี 2568 (ม.ค. - ธ.ค. 2568) มีอุบัติเหตุสารเคมีรั่วไหลทั้งหมด <strong>23 ครั้ง</strong> เป็นกรณีของแอมโมเนียรั่วถึง 18 ครั้ง ที่เหลือเกิดจากน้ำมันดิบ ไนตริก และโพรเพน เป็นต้น";
+            } else if (currentYear === '2569') {
+                insightText.innerHTML = "ในปี 2569 (ม.ค. - พ.ค. 2569) มีข้อมูลรั่วไหล <strong>9 ครั้ง</strong> เป็นแอมโมเนีย 7 ครั้ง โดยความโดดเด่นของปีนี้คือพบสารเคมีแปลกใหม่ ได้แก่ <strong>ก๊าซไนโตรเจน</strong> และ <strong>เอทิลอะซิเตท</strong> รั่วไหลเพิ่มเข้ามา";
+            }
+
+            // Sync analysis text at bottom with correct statistics
+            const f1 = document.getElementById("footer-analysis-1");
+            const f2 = document.getElementById("footer-analysis-2");
+            if (currentYear === 'all') {
+                f1.innerHTML = "จากภาพรวมความปลอดภัย ปี 2568 (ม.ค. - ธ.ค. 2568) ทั่วประเทศเกิดอุบัติเหตุขึ้นรวม <strong>173 ครั้ง</strong> ในขณะที่ปี 2569 (ม.ค. - พ.ค. 2569) บันทึกสถิติรวมไว้ที่ <strong>63 ครั้ง</strong> สะท้อนให้เห็นถึงมาตรการเชิงรุกที่มีประสิทธิภาพทำให้อัตราเกิดเหตุลดลงกว่ากึ่งหนึ่ง";
+                f2.innerHTML = "แม้สารเคมีหกรั่วไหลจะมีสัดส่วนเฉลี่ยรวมอยู่ที่ประมาณ <strong>13.6%</strong> ของเหตุการณ์ทั้งหมด (32 ครั้งจาก 236 ครั้ง) แต่เป็นกรณีที่มีอัตราความเสี่ยงปานกลางถึงสูงมากเนื่องจากสารพิษแพร่กระจาย โดยเฉพาะ 'แอมโมเนีย' ที่พบเป็นเปอร์เซ็นต์สูงที่สุด";
+            } else if (currentYear === '2568') {
+                f1.innerHTML = "ในปี 2568 (ม.ค. - ธ.ค. 2568) ทั่วประเทศเกิดอุบัติเหตุขึ้นรวม <strong>173 ครั้ง</strong> ประกอบด้วย อัคคีภัยสูงถึง 122 ครั้ง, สารเคมีหกรั่วไหล 23 ครั้ง และอุบัติเหตุจากเครื่องจักรขัดข้องในสายการผลิต 18 ครั้ง";
+                f2.innerHTML = "สารเคมีหกรั่วไหลในปี 2568 จำนวน <strong>23 ครั้ง</strong> คิดเป็นสัดส่วนร้อยละ 13.3 ของอุบัติเหตุทั้งหมด โดยเกือบทั้งหมดพุ่งเป้าไปที่ความล้มเหลวของวาล์วระบบหล่อเย็นแอมโมเนีย";
+            } else if (currentYear === '2569') {
+                f1.innerHTML = "ในปี 2569 (ม.ค. - พ.ค. 2569) บันทึกสถิติอุบัติเหตุทั้งหมดสะสมไว้ที่ <strong>63 ครั้ง</strong> แบ่งออกเป็นอัคคีภัย 47 ครั้ง สารเคมีหกรั่วไหล 9 ครั้ง และเครื่องจักรอีก 7 ครั้ง";
+                f2.innerHTML = "สำหรับปี 2569 เคสสารเคมีหกรั่วไหลอยู่ที่ <strong>9 ครั้ง</strong> คิดเป็นสัดส่วนร้อยละ 14.3 ของอุบัติเหตุปีนี้ มีการตรวจพบเหตุจากก๊าซไนโตรเจนและเอทิลอะซิเตทเพิ่มเติมเข้ามา";
+            }
+        }
+
+        // --- 5. INITIALIZATION ON WINDOW LOAD ---
+        window.onload = function() {
+            setYear('all');
+            switchTab('overview');
+        };
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประมวลผลข้อมูลสารเคมี (สารเดี่ยว)  ในพื้นที่ EEC และกรุงเทพมหานคร</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Font: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Main Navigation Bar -->
+    <nav class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                        <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg block leading-none">ประมวลผลข้อมูลสารเคมี (สารเดี่ยว) ในพื้นที่ EEC & กรุงเทพฯ</span>
+                        <span class="text-xs text-indigo-200">ระบบแดชบอร์ดวิเคราะห์ปริมาณสารเคมีรายจังหวัด</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-4">
+                    <a href="#prov-total-comparison" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 text-indigo-100">เปรียบเทียบภาพรวมพื้นที่</a>
+                    <a href="#ammonia-analysis" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 text-indigo-100">วิเคราะห์แอมโมเนีย</a>
+                    <a href="#flammable-analysis" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 text-indigo-100">วิเคราะห์สารไวไฟ</a>
+                    <a href="#dashboard" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 text-indigo-100">แดชบอร์ดหลัก</a>
+                    <a href="#raw-data" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 text-indigo-100">ตารางข้อมูล</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- File Import and Status Section -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="database" class="text-indigo-600 w-5 h-5"></i>
+                        นำเข้าและเตรียมข้อมูลเพื่อใช้งาน
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        เลือกไฟล์รายงานสารเคมี CSV เพื่อเข้าสู่ระบบ (ระบบรองรับไฟล์ระยอง, ฉะเชิงเทรา, ชลบุรี และกรุงเทพฯ)
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Demo Data Button -->
+                    <button id="btnLoadDemo" class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        ใช้ข้อมูลตัวอย่างเพื่อแสดงผลทันที
+                    </button>
+                    <!-- Actual File Upload -->
+                    <label class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>อัปโหลดไฟล์ข้อมูล CSV</span>
+                        <input type="file" id="fileInput" accept=".csv" class="hidden" multiple>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Upload Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                <!-- Rayong Card -->
+                <div id="status-rayong" class="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-lg bg-slate-200 text-slate-600 status-icon">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700 font-sans">ข้อมูลจังหวัดระยอง</p>
+                            <p class="text-xs text-slate-400 status-text font-sans">ยังไม่ได้นำเข้า</p>
+                        </div>
+                    </div>
+                    <span class="status-badge px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">Unloaded</span>
+                </div>
+
+                <!-- Chachoengsao Card -->
+                <div id="status-chachoengsao" class="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-lg bg-slate-200 text-slate-600 status-icon">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700 font-sans">ข้อมูลจังหวัดฉะเชิงเทรา</p>
+                            <p class="text-xs text-slate-400 status-text font-sans">ยังไม่ได้นำเข้า</p>
+                        </div>
+                    </div>
+                    <span class="status-badge px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">Unloaded</span>
+                </div>
+
+                <!-- Chonburi Card -->
+                <div id="status-chonburi" class="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-lg bg-slate-200 text-slate-600 status-icon">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700 font-sans">ข้อมูลจังหวัดชลบุรี</p>
+                            <p class="text-xs text-slate-400 status-text font-sans">ยังไม่ได้นำเข้า</p>
+                        </div>
+                    </div>
+                    <span class="status-badge px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">Unloaded</span>
+                </div>
+
+                <!-- Bangkok Card -->
+                <div id="status-bangkok" class="p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-lg bg-slate-200 text-slate-600 status-icon">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-700 font-sans">ข้อมูลกรุงเทพมหานคร</p>
+                            <p class="text-xs text-slate-400 status-text font-sans">ยังไม่ได้นำเข้า</p>
+                        </div>
+                    </div>
+                    <span class="status-badge px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">Unloaded</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Cards Section -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-500">จำนวนรายการสารเคมีทั้งหมด</p>
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
+                </div>
+                <p id="kpi-total-items" class="text-3xl font-bold text-slate-900 mt-4">0</p>
+                <p class="text-xs text-slate-400 mt-2">รายการสารเดี่ยวที่มี CAS No.ในระบบปัจจุบัน</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-500">สารเดี่ยวที่มีรหัส CAS ทั้งหมด</p>
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                </div>
+                <p id="kpi-unique-cas" class="text-3xl font-bold text-slate-900 mt-4">0</p>
+                <p class="text-xs text-indigo-600 font-medium mt-2">สารเคมีที่ไม่ซ้ำกัน</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-500">ปริมาณการจัดเก็บรวมสูงสุด</p>
+                    <div class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="package" class="w-5 h-5"></i></div>
+                </div>
+                <p id="kpi-total-storage" class="text-3xl font-bold text-slate-900 mt-4">0.00</p>
+                <p class="text-xs text-slate-400 mt-2">หน่วย: ตัน (ข้อมูลเฉพาะสารเดี่ยวที่มี CAS No.)</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-500">ปริมาณการใช้สารรวม</p>
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                </div>
+                <p id="kpi-total-usage" class="text-3xl font-bold text-slate-900 mt-4">0.00</p>
+                <p class="text-xs text-slate-400 mt-2">หน่วย: ตันต่อปี (ข้อมูลเฉพาะสารเดี่ยวที่มี CAS No.)</p>
+            </div>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="p-1.5 bg-indigo-100 rounded text-indigo-700">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                    </div>
+                    <span class="font-bold text-slate-800">กรองข้อมูลในแดชบอร์ดหลัก</span>
+                </div>
+                <!-- Filter Buttons for Province selection -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button class="filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm border border-indigo-600 transition" data-province="all">
+                        รวมทั้งหมด (3 จังหวัด EEC)
+                    </button>
+                    <button class="filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-province="ระยอง">
+                        ระยอง
+                    </button>
+                    <button class="filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-province="ฉะเชิงเทรา">
+                        ฉะเชิงเทรา
+                    </button>
+                    <button class="filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-province="ชลบุรี">
+                        ชลบุรี
+                    </button>
+                    <button class="filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-province="กรุงเทพ">
+                        กรุงเทพมหานคร (แยกต่างหาก)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW FOCUS: Overview & Comparison Section -->
+        <section id="prov-total-comparison" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8 bg-gradient-to-r from-slate-50 via-indigo-50/10 to-slate-50">
+            <div class="border-b border-slate-200 pb-4 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">เปรียบเทียบสัดส่วน: สารเดี่ยวที่มีรหัส CAS กับข้อมูลสารเคมีรวมทั้งหมดรายจังหวัด</h2>
+                            <p class="text-xs text-slate-500">สัดส่วนสารเคมีรวมครอบคลุมสารผสม สารละลายในอุตสาหกรรม และสารเดี่ยว</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full border border-amber-200">
+                        * ระบบประมวลผลข้อมูลสารเดี่ยวที่มี CAS No. เท่านั้น
+                    </span>
+                </div>
+            </div>
+
+            <!-- Comparison Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                <!-- 1. Rayong Card -->
+                <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">จังหวัดระยอง</span>
+                        <span class="text-[10px] text-slate-400">สารเดี่ยว vs ทั้งหมด</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนรายการ</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-rayong-items" class="text-sm font-bold text-slate-800">0 / 21,415</span>
+                                <span id="comp-rayong-items-pct" class="text-[10px] font-semibold text-blue-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-rayong-items-bar" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนจัดเก็บสูงสุด</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-rayong-storage" class="text-[10px] font-bold text-slate-800">0 / 1.27 พันล้านตัน</span>
+                                <span id="comp-rayong-storage-pct" class="text-[10px] font-semibold text-blue-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-rayong-storage-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนการใช้ต่อปี</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-rayong-usage" class="text-[10px] font-bold text-slate-800">0 / 11.75 ล้านตัน</span>
+                                <span id="comp-rayong-usage-pct" class="text-[10px] font-semibold text-blue-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-rayong-usage-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Chonburi Card -->
+                <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">จังหวัดชลบุรี</span>
+                        <span class="text-[10px] text-slate-400">สารเดี่ยว vs ทั้งหมด</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนรายการ</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chonburi-items" class="text-sm font-bold text-slate-800">0 / 34,567</span>
+                                <span id="comp-chonburi-items-pct" class="text-[10px] font-semibold text-amber-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chonburi-items-bar" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนจัดเก็บสูงสุด</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chonburi-storage" class="text-[10px] font-bold text-slate-800">0 / 71.33 ล้านตัน</span>
+                                <span id="comp-chonburi-storage-pct" class="text-[10px] font-semibold text-amber-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chonburi-storage-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนการใช้ต่อปี</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chonburi-usage" class="text-[10px] font-bold text-slate-800">0 / 62.22 ล้านตัน</span>
+                                <span id="comp-chonburi-usage-pct" class="text-[10px] font-semibold text-amber-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chonburi-usage-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Chachoengsao Card -->
+                <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">จังหวัดฉะเชิงเทรา</span>
+                        <span class="text-[10px] text-slate-400">สารเดี่ยว vs ทั้งหมด</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนรายการ</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chachoengsao-items" class="text-sm font-bold text-slate-800">0 / 16,402</span>
+                                <span id="comp-chachoengsao-items-pct" class="text-[10px] font-semibold text-indigo-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chachoengsao-items-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนจัดเก็บสูงสุด</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chachoengsao-storage" class="text-[10px] font-bold text-slate-800">0 / 17.88 ล้านตัน</span>
+                                <span id="comp-chachoengsao-storage-pct" class="text-[10px] font-semibold text-indigo-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chachoengsao-storage-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนการใช้ต่อปี</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-chachoengsao-usage" class="text-[10px] font-bold text-slate-800">0 / 1.39 ล้านตัน</span>
+                                <span id="comp-chachoengsao-usage-pct" class="text-[10px] font-semibold text-indigo-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-chachoengsao-usage-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Bangkok Card -->
+                <div class="bg-white rounded-xl p-4 border border-fuchsia-100 shadow-sm ring-2 ring-fuchsia-50">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-fuchsia-700 bg-fuchsia-50 px-2 py-0.5 rounded">กรุงเทพมหานคร</span>
+                        <span class="text-[10px] text-fuchsia-500 font-medium">นอกเขต EEC</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนรายการ</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-bangkok-items" class="text-sm font-bold text-slate-800">0 / 19,868</span>
+                                <span id="comp-bangkok-items-pct" class="text-[10px] font-semibold text-fuchsia-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-bangkok-items-bar" class="bg-fuchsia-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนจัดเก็บสูงสุด</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-bangkok-storage" class="text-[10px] font-bold text-slate-800">0 / 25.23 ล้านตัน</span>
+                                <span id="comp-bangkok-storage-pct" class="text-[10px] font-semibold text-fuchsia-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-bangkok-storage-bar" class="bg-fuchsia-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-400">สัดส่วนการใช้ต่อปี</p>
+                            <div class="flex justify-between items-end mt-0.5">
+                                <span id="comp-bangkok-usage" class="text-[10px] font-bold text-slate-800">0 / 1.33 ล้านตัน</span>
+                                <span id="comp-bangkok-usage-pct" class="text-[10px] font-semibold text-fuchsia-600">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
+                                <div id="comp-bangkok-usage-bar" class="bg-fuchsia-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informational Notes -->
+            <div class="flex items-start gap-2 text-xs text-slate-500 bg-slate-100/60 p-3.5 rounded-xl border border-slate-200">
+                <i data-lucide="info" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+                <div>
+                    <span class="font-semibold text-slate-700 font-sans">หมายเหตุ:</span> 1. ระบบนี้เป็นการประมวลผลเฉพาะสารเดี่ยวที่มี CAS No. เท่านั้น 2. ข้อมูลของกรุงเทพมหานคร จะไม่รวมกับภาพรวมของพื้นที่ 3 จังหวัดของ EEC 
+                </div>
+            </div>
+        </section>
+
+        <!-- SPECIAL FOCUS: Ammonium Anhydrous Analysis Section -->
+        <section id="ammonia-analysis" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8 bg-gradient-to-b from-white to-blue-50/10">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-blue-600 text-white p-1.5 rounded-lg">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">การวิเคราะห์เฉพาะสาร: Ammonium Anhydrous (แอมโมเนียแอนไฮดรัส)</h2>
+                        <p class="text-xs text-slate-500">พิจารณาผลรวมจากรหัส CAS No. 7664-41-7 เทียบกับภาพรวมสารเดี่ยวทั้งหมดในระบบที่กรอง</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 1. Storage Comparison Card -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">สถิติการจัดเก็บสูงสุด</span>
+                            <i data-lucide="package" class="text-slate-400 w-5 h-5"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-700 mt-3 text-sm">ปริมาณการจัดเก็บของแอมโมเนีย</h4>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="amm-storage-val" class="text-3xl font-extrabold text-slate-900 font-sans">0.00</span>
+                            <span class="text-xs text-slate-500">ตัน</span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500 font-sans">
+                            เทียบกับยอดจัดเก็บสารเดี่ยวทั้งหมด: <span id="amm-storage-total" class="font-semibold text-slate-800">0.00</span> ตัน
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-50">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">คิดเป็นสัดส่วน</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span id="amm-storage-pct" class="text-2xl font-bold text-blue-600 font-sans">0.00%</span>
+                            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="amm-storage-bar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Usage Comparison Card -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">สถิติการใช้ต่อปี</span>
+                            <i data-lucide="trending-up" class="text-slate-400 w-5 h-5"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-700 mt-3 text-sm">ปริมาณการใช้ของแอมโมเนีย</h4>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="amm-usage-val" class="text-3xl font-extrabold text-slate-900 font-sans">0.00</span>
+                            <span class="text-xs text-slate-500">ตัน/ปี</span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500 font-sans">
+                            เทียบกับยอดใช้สารเดี่ยวทั้งหมด: <span id="amm-usage-total" class="font-semibold text-slate-800">0.00</span> ตัน/ปี
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-50">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">คิดเป็นสัดส่วน</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span id="amm-usage-pct" class="text-2xl font-bold text-emerald-600 font-sans">0.00%</span>
+                            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="amm-usage-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Pie/Donut proportion visual representation -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between h-[250px] lg:h-auto">
+                    <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded self-start">กราฟเปรียบเทียบสัดส่วนแอมโมเนีย</span>
+                    <div class="relative flex-1 min-h-0 mt-3">
+                        <canvas id="chartAmmoniaProportion"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SPECIAL FOCUS 2: Flammable Analysis Section -->
+        <section id="flammable-analysis" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8 bg-gradient-to-b from-white to-amber-50/10">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-amber-500 text-white p-1.5 rounded-lg">
+                        <i data-lucide="flame" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">การวิเคราะห์กลุ่มสารไวไฟ (Flammable Chemicals)</h2>
+                        <p class="text-xs text-slate-500">พิจารณาผลรวมกลุ่มจัดเก็บความเสี่ยงสูง (Storage Class 4.1A, 4.1B, 3A, 3B) เทียบกับสารเคมีเดี่ยวทุกประเภทในระบบ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 1. Storage Comparison Card -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">สถิติการจัดเก็บสารไวไฟ</span>
+                            <i data-lucide="package" class="text-slate-400 w-5 h-5"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-700 mt-3 text-sm">ปริมาณจัดเก็บสูงสุดของสารไวไฟ</h4>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="flam-storage-val" class="text-3xl font-extrabold text-slate-900 font-sans">0.00</span>
+                            <span class="text-xs text-slate-500">ตัน</span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500 font-sans">
+                            เทียบกับยอดจัดเก็บสารเดี่ยวทั้งหมด: <span id="flam-storage-total" class="font-semibold text-slate-800">0.00</span> ตัน
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-50">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">คิดเป็นสัดส่วนการจัดเก็บ</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span id="flam-storage-pct" class="text-2xl font-bold text-amber-500 font-sans">0.00%</span>
+                            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="flam-storage-bar" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Usage Comparison Card -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-1 rounded">ปริมาณใช้งานรายปี</span>
+                            <i data-lucide="trending-up" class="text-slate-400 w-5 h-5"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-700 mt-3 text-sm">ปริมาณการใช้ต่อปีของสารไวไฟ</h4>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="flam-usage-val" class="text-3xl font-extrabold text-slate-900 font-sans">0.00</span>
+                            <span class="text-xs text-slate-500">ตัน/ปี</span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500 font-sans">
+                            เทียบกับยอดใช้สารเดี่ยวทั้งหมด: <span id="flam-usage-total" class="font-semibold text-slate-800">0.00</span> ตัน/ปี
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-50">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">คิดเป็นสัดส่วนการใช้งาน</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span id="flam-usage-pct" class="text-2xl font-bold text-rose-600 font-sans">0.00%</span>
+                            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="flam-usage-bar" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Pie/Donut proportion visual representation -->
+                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between h-[250px] lg:h-auto">
+                    <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded self-start">กราฟเปรียบเทียบสัดส่วนสารไวไฟ</span>
+                    <div class="relative flex-1 min-h-0 mt-3">
+                        <canvas id="chartFlammableProportion"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Dashboard Section -->
+        <section id="dashboard" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            
+            <!-- Dashboard Chart Card 1 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[480px]">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">1. TOP 10 ปริมาณการจัดเก็บสูงสุดต่อปี</h3>
+                        <p class="text-xs text-slate-400 mt-1">วิเคราะห์ยอดรวมตามรายรหัส CAS No. (หน่วย: ตัน)</p>
+                    </div>
+                    <span class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></span>
+                </div>
+                <div class="relative flex-1 min-h-0">
+                    <canvas id="chartTopStorageCas"></canvas>
+                </div>
+            </div>
+
+            <!-- Dashboard Chart Card 2 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[480px]">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">2. TOP 10 ปริมาณการใช้ต่อปี</h3>
+                        <p class="text-xs text-slate-400 mt-1">วิเคราะห์ยอดรวมตามรายรหัส CAS No. (หน่วย: ตัน)</p>
+                    </div>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></span>
+                </div>
+                <div class="relative flex-1 min-h-0">
+                    <canvas id="chartTopUsageCas"></canvas>
+                </div>
+            </div>
+
+            <!-- Dashboard Chart Card 3 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[480px]">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">3. TOP 10 Storage Class ปริมาณการจัดเก็บสูงสุดต่อปี</h3>
+                        <p class="text-xs text-slate-400 mt-1">วิเคราะห์และแยกแยะตามประเภทระดับการจัดเก็บภัยพิบัติ (หน่วย: ตัน)</p>
+                    </div>
+                    <span class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="pie-chart" class="w-5 h-5"></i></span>
+                </div>
+                <div class="relative flex-1 min-h-0">
+                    <canvas id="chartTopStorageClass"></canvas>
+                </div>
+            </div>
+
+            <!-- Dashboard Chart Card 4 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[480px]">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">4. TOP 10 Storage Class ปริมาณการใช้ต่อปี</h3>
+                        <p class="text-xs text-slate-400 mt-1">วิเคราะห์และแยกแยะตามประเภทระดับการใช้พลังงาน (หน่วย: ตัน)</p>
+                    </div>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="pie-chart" class="w-5 h-5"></i></span>
+                </div>
+                <div class="relative flex-1 min-h-0">
+                    <canvas id="chartTopUsageClass"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Detailed Table Section -->
+        <section id="raw-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5 text-indigo-600"></i>
+                        สืบค้นรายละเอียดข้อมูลสารเคมีทั้งหมด
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">แสดงข้อมูลสารเคมีแยกประเภท แหล่งโรงงาน และการจัดเก็บ</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative">
+                        <input type="text" id="tableSearchInput" placeholder="ค้นหาชื่อสารเคมี / CAS No. / โรงงาน..." class="w-full sm:w-80 pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 w-4.5 h-4.5 text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto rounded-xl border border-slate-100">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <th class="px-6 py-4">จังหวัด</th>
+                            <th class="px-6 py-4">CAS Number</th>
+                            <th class="px-6 py-4">ชื่อสารเคมี</th>
+                            <th class="px-6 py-4">ชื่อโรงงาน</th>
+                            <th class="px-6 py-4">Storage Class</th>
+                            <th class="px-6 py-4 text-right">ปริมาณจัดเก็บ (ตัน)</th>
+                            <th class="px-6 py-4 text-right">ปริมาณการใช้ (ตัน)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chemicalTableBody" class="divide-y divide-slate-100 text-sm text-slate-600">
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
+                                    <span>กรุณาอัปโหลดไฟล์ข้อมูลหรือใช้ข้อมูลตัวอย่างเพื่อแสดงข้อมูลในตาราง</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Control -->
+            <div class="flex items-center justify-between mt-4">
+                <span id="tablePageIndicator" class="text-xs text-slate-500 font-sans">แสดงผล 0 - 0 จาก 0 รายการ</span>
+                <div class="flex items-center gap-2">
+                    <button id="btnPrevPage" class="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 text-slate-500" disabled>
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btnNextPage" class="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 text-slate-500" disabled>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-10 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">EEC & Bangkok Chemical Inventory Management System Dashboard</p>
+            <p class="text-xs text-slate-600 mt-2">© 2026 สำนักงานคณะกรรมการนโยบายเขตพัฒนาพิเศษภาคตะวันออก (EEC)</p>
+        </div>
+    </footer>
+
+    <!-- Script Area for Dashboard Processing and App logic -->
+    <script>
+        // Global variables state holding raw parsing databases
+        let allChemicalData = [];
+        let filteredChemicalData = [];
+        let currentProvinceFilter = "all";
+        
+        // Pagination state
+        let tableCurrentPage = 1;
+        const itemsPerPage = 10;
+
+        // Active Chart References
+        let chartInstances = {};
+
+        // Constant data representing the total area reported chemical statistics (including mixtures & solutions)
+        const TOTALS_PROV_METRICS = {
+            "ระยอง": { items: 21415, storage: 1276502709.11, usage: 11751802.95 },
+            "ชลบุรี": { items: 34567, storage: 71334297.51, usage: 62222789.83 },
+            "ฉะเชิงเทรา": { items: 16402, storage: 17884909.96, usage: 1395832.90 },
+            "กรุงเทพ": { items: 19868, storage: 25234033.60, usage: 1332166.69 }
+        };
+
+        // Document Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            
+            // Connect actions
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            document.getElementById('btnLoadDemo').addEventListener('click', loadDemoData);
+            document.getElementById('tableSearchInput').addEventListener('input', () => {
+                tableCurrentPage = 1;
+                filterAndRender();
+            });
+
+            // Set up province filters behavior
+            document.querySelectorAll('.filter-prov-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-prov-btn').forEach(b => {
+                        b.className = "filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition";
+                    });
+                    
+                    e.currentTarget.className = "filter-prov-btn px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm border border-indigo-600 transition";
+                    currentProvinceFilter = e.currentTarget.getAttribute('data-province');
+                    tableCurrentPage = 1;
+                    filterAndRender();
+                });
+            });
+
+            // Set pagination listeners
+            document.getElementById('btnPrevPage').addEventListener('click', () => {
+                if (tableCurrentPage > 1) {
+                    tableCurrentPage--;
+                    renderTable();
+                }
+            });
+            document.getElementById('btnNextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredChemicalData.length / itemsPerPage);
+                if (tableCurrentPage < totalPages) {
+                    tableCurrentPage++;
+                    renderTable();
+                }
+            });
+
+            // Run initial empty comparison view render
+            updateProvinceComparisons();
+        });
+
+        // 1. Data Parsing Engine for CSV
+        function parseCSVLine(line) {
+            let result = [];
+            let inQuotes = false;
+            let currentField = '';
+            
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"' || char === '\"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(currentField.trim());
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            result.push(currentField.trim());
+            return result;
+        }
+
+        // Parse individual files
+        function processCSVContent(text, provinceName) {
+            const lines = text.split(/\r?\n/);
+            if (lines.length < 2) return [];
+
+            const header = parseCSVLine(lines[0]);
+            
+            // Map header indexes dynamically
+            const idxCas = header.findIndex(h => h.toLowerCase().includes('cas'));
+            const idxName = header.findIndex(h => h.toLowerCase().includes('สารเคมี') || h.toLowerCase().includes('chemical'));
+            const idxStorageClass = header.findIndex(h => h.toLowerCase().includes('ประเภทของการจัดเก็บ') || h.toLowerCase().includes('storage class') || h.toLowerCase().includes('ประเภทการจัดเก็บ'));
+            const idxMaxStorage = header.findIndex(h => h.toLowerCase().includes('จัดเก็บสูงสุด') || h.toLowerCase().includes('storage'));
+            const idxUsage = header.findIndex(h => h.toLowerCase().includes('ใช้รวม') || h.toLowerCase().includes('usage') || h.toLowerCase().includes('ปริมาณการใช้'));
+            const idxFactory = header.findIndex(h => h.toLowerCase().includes('ชื่อโรงงาน') || h.toLowerCase().includes('factory'));
+
+            const items = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i]) continue;
+                const cols = parseCSVLine(lines[i]);
+                if (cols.length < 3) continue;
+
+                // Extraction logic
+                const cas = idxCas !== -1 ? cols[idxCas] : '';
+                const name = idxName !== -1 ? cols[idxName] : '';
+                const rawStorageClass = idxStorageClass !== -1 ? cols[idxStorageClass] : 'Unknown';
+                const factory = idxFactory !== -1 ? cols[idxFactory] : 'ไม่ปรากฏข้อมูล';
+
+                // Parsing numbers (cleaning out potential comma separator formatting like "1,200.5")
+                let storageValue = 0;
+                if (idxMaxStorage !== -1 && cols[idxMaxStorage]) {
+                    storageValue = parseFloat(cols[idxMaxStorage].replace(/,/g, '')) || 0;
+                }
+                
+                let usageValue = 0;
+                if (idxUsage !== -1 && cols[idxUsage]) {
+                    usageValue = parseFloat(cols[idxUsage].replace(/,/g, '')) || 0;
+                }
+
+                // Check and cleanup Storage Class
+                let storageClass = 'Unknown';
+                if (rawStorageClass) {
+                    storageClass = rawStorageClass.trim();
+                    if (!storageClass.toLowerCase().startsWith('storage class')) {
+                        // Formatter standardizing to "Storage Class X"
+                        storageClass = 'Storage Class ' + storageClass;
+                    }
+                }
+
+                if (cas && cas !== '-') {
+                    items.push({
+                        province: provinceName,
+                        cas: cas.trim(),
+                        name: name.trim() || 'สารเคมีรหัส ' + cas,
+                        factory: factory,
+                        storageClass: storageClass,
+                        storage: storageValue,
+                        usage: usageValue
+                    });
+                }
+            }
+
+            return items;
+        }
+
+        // File upload process handler
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            let loadedCount = 0;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                let matchedProvince = "ไม่สามารถระบุจังหวัด";
+                let statusElementId = "";
+
+                const fileNameLower = file.name.toLowerCase();
+
+                if (fileNameLower.includes("ระยอง") || fileNameLower.includes("rayong")) {
+                    matchedProvince = "ระยอง";
+                    statusElementId = "status-rayong";
+                } else if (fileNameLower.includes("ฉะเชิงเทรา") || fileNameLower.includes("chachoengsao")) {
+                    matchedProvince = "ฉะเชิงเทรา";
+                    statusElementId = "status-chachoengsao";
+                } else if (fileNameLower.includes("ชลบุรี") || fileNameLower.includes("chonburi")) {
+                    matchedProvince = "ชลบุรี";
+                    statusElementId = "status-chonburi";
+                } else if (fileNameLower.includes("กรุงเทพ") || fileNameLower.includes("bangkok") || fileNameLower.includes("bkk")) {
+                    matchedProvince = "กรุงเทพ";
+                    statusElementId = "status-bangkok";
+                }
+
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    const items = processCSVContent(text, matchedProvince);
+                    
+                    // Filter out existing province's data before adding new (to avoid duplicate ingestion)
+                    if (matchedProvince !== "ไม่สามารถระบุจังหวัด") {
+                        allChemicalData = allChemicalData.filter(d => d.province !== matchedProvince);
+                    }
+                    allChemicalData = allChemicalData.concat(items);
+
+                    // Update Province visual card status
+                    if (statusElementId) {
+                        const statusCard = document.getElementById(statusElementId);
+                        statusCard.querySelector('.status-text').textContent = `โหลดเสร็จแล้ว (${items.length.toLocaleString()} รายการ)`;
+                        statusCard.querySelector('.status-text').className = "text-xs text-emerald-600 status-text font-medium font-sans";
+                        statusCard.querySelector('.status-icon').className = "p-2.5 rounded-lg bg-emerald-50 text-emerald-600 status-icon";
+                        statusCard.querySelector('.status-badge').textContent = "Loaded";
+                        statusCard.querySelector('.status-badge').className = "status-badge px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800";
+                    }
+
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        filterAndRender();
+                    }
+                };
+
+                reader.readAsText(file);
+            });
+        }
+
+        // 2. Demo Mock Database to let user test right away
+        function loadDemoData() {
+            // High quality synthetic real-world mock data simulating top elements requested
+            const demoChemicals = [
+                // Rayong Data
+                { province: "ระยอง", cas: "7664-41-7", name: "แอมโมเนียแอนไฮดรัส (ammonia anhydrous)", factory: "บริษัท เคมีอุตสาหกรรมระยอง จำกัด", storageClass: "Storage Class 2A", storage: 12500, usage: 120000 },
+                { province: "ระยอง", cas: "67-64-1", name: "อะซิโตน (Acetone)", factory: "บริษัท โพลีเมอร์ภาคตะวันออก จำกัด", storageClass: "Storage Class 3A", storage: 18000, usage: 85000 },
+                { province: "ระยอง", cas: "1330-20-7", name: "ไซลีน (Xylene)", factory: "โรงงานเคมีมาบตาพุด", storageClass: "Storage Class 3A", storage: 42000, usage: 145000 },
+                { province: "ระยอง", cas: "108-88-3", name: "โทลูอีน (Toluene)", factory: "บริษัท เคมีระยองสตาร์ จำกัด", storageClass: "Storage Class 3A", storage: 31000, usage: 112000 },
+                { province: "ระยอง", cas: "7664-93-9", name: "กรดซัลฟูริก (Sulfuric Acid)", factory: "บจก. เคมีก้าวหน้า ระยอง", storageClass: "Storage Class 8B", storage: 50000, usage: 98000 },
+                { province: "ระยอง", cas: "50-00-0", name: "ฟอร์มาลดีไฮด์ (Formaldehyde)", factory: "บจก. อุตสาหกรรมเรซินระยอง", storageClass: "Storage Class 6.1A", storage: 14000, usage: 62000 },
+                { province: "ระยอง", cas: "110-54-3", name: "เฮกเซน (Hexane)", factory: "บจก. ระยองสกัดน้ำมันพืช", storageClass: "Storage Class 3B", storage: 29000, usage: 89000 },
+                { province: "ระยอง", cas: "74-85-1", name: "เอทิลีน (Ethylene)", factory: "ปิโตรเคมีคอล อีสเทิร์น", storageClass: "Storage Class 2A", storage: 85000, usage: 350000 },
+                { province: "ระยอง", cas: "115-07-1", name: "โพรพิลีน (Propylene)", factory: "ปิโตรเคมีคอล อีสเทิร์น", storageClass: "Storage Class 2A", storage: 72000, usage: 290000 },
+                { province: "ระยอง", cas: "107-13-1", name: "อะคริโลไนไตรล์ (Acrylonitrile)", factory: "ระยอง อะคริลิค เคมิคอล", storageClass: "Storage Class 3A", storage: 19000, usage: 78000 },
+                
+                // Chachoengsao Data
+                { province: "ฉะเชิงเทรา", cas: "7664-93-9", name: "กรดซัลฟูริก (Sulfuric Acid)", factory: "บริษัท แบตเตอรี่ไทย จำกัด", storageClass: "Storage Class 8B", storage: 32000, usage: 88000 },
+                { province: "ฉะเชิงเทรา", cas: "67-64-1", name: "อะซิโตน (Acetone)", factory: "โรงงานอิเล็กทรอนิกส์แปดริ้ว", storageClass: "Storage Class 3A", storage: 11000, usage: 56000 },
+                { province: "ฉะเชิงเทรา", cas: "141-78-6", name: "เอทิลอะซิเตต (Ethyl Acetate)", factory: "บจก. แปดริ้วเคมีเคิลส์", storageClass: "Storage Class 3A", storage: 15000, usage: 69000 },
+                { province: "ฉะเชิงเทรา", cas: "108-88-3", name: "โทลูอีน (Toluene)", factory: "สีอุตสาหกรรมแปดริ้ว", storageClass: "Storage Class 3A", storage: 12000, usage: 48000 },
+                { province: "ฉะเชิงเทรา", cas: "1310-73-2", name: "โซเดียมไฮดรอกไซด์ (Sodium Hydroxide)", factory: "บจก. คอสเมติกฉะเชิงเทรา", storageClass: "Storage Class 8B", storage: 21000, usage: 74000 },
+                { province: "ฉะเชิงเทรา", cas: "7647-01-0", name: "กรดไฮโดรคลอริก (Hydrochloric Acid)", factory: "บจก. เหล็กฉะเชิงเทราอุตสาหกรรม", storageClass: "Storage Class 8B", storage: 28000, usage: 63000 },
+                { province: "ฉะเชิงเทรา", cas: "1330-20-7", name: "ไซลีน (Xylene)", factory: "สีอุตสาหกรรมแปดริ้ว", storageClass: "Storage Class 3A", storage: 9500, usage: 41000 },
+                { province: "ฉะเชิงเทรา", cas: "7664-41-7", name: "แอมโมเนียแอนไฮดรัส (ammonia anhydrous)", factory: "โรงน้ำแข็งแปดริ้วอินเตอร์", storageClass: "Storage Class 2A", storage: 8000, usage: 30000 },
+                { province: "ฉะเชิงเทรา", cas: "74-96-4", name: "เอทิลโบรไมด์ (Ethyl bromide)", factory: "บจก. แปลงยาว พลาสติก", storageClass: "Storage Class 4.1A", storage: 4500, usage: 12000 },
+                
+                // Chonburi Data
+                { province: "ชลบุรี", cas: "1330-20-7", name: "ไซลีน (Xylene)", factory: "โรงกลั่นน้ำมันชลบุรีเซ็นเตอร์", storageClass: "Storage Class 3A", storage: 65000, usage: 220000 },
+                { province: "ชลบุรี", cas: "108-88-3", name: "โทลูอีน (Toluene)", factory: "โรงกลั่นน้ำมันชลบุรีเซ็นเตอร์", storageClass: "Storage Class 3A", storage: 54000, usage: 180000 },
+                { province: "ชลบุรี", cas: "7664-93-9", name: "กรดซัลฟูริก (Sulfuric Acid)", factory: "ชลบุรี แปรรูปโลหะการ", storageClass: "Storage Class 8B", storage: 45000, usage: 110000 },
+                { province: "ชลบุรี", cas: "1310-73-2", name: "โซเดียมไฮดรอกไซด์ (Sodium Hydroxide)", factory: "บริษัท ผลิตกระดาษชลบุรี จำกัด", storageClass: "Storage Class 8B", storage: 39000, usage: 125000 },
+                { province: "ชลบุรี", cas: "67-63-0", name: "ไอโซโพรพิลแอลกอฮอล์ (Isopropyl Alcohol)", factory: "บริษัท เลนส์และอิเล็กทรอนิกส์ชลบุรี", storageClass: "Storage Class 3A", storage: 22000, usage: 94000 },
+                { province: "ชลบุรี", cas: "7647-01-0", name: "กรดไฮโดรคลอริก (Hydrochloric Acid)", factory: "ชลบุรี แปรรูปโลหะการ", storageClass: "Storage Class 8B", storage: 3100, usage: 7200 },
+                { province: "ชลบุรี", cas: "7664-41-7", name: "แอมโมเนียแอนไฮดรัส (ammonia anhydrous)", factory: "ห้องเย็นแหลมฉบังสตาร์", storageClass: "Storage Class 2A", storage: 18000, usage: 52000 },
+                { province: "ชลบุรี", cas: "141-78-6", name: "เอทิลอะซิเตต (Ethyl Acetate)", factory: "สีและเคมีเรือชลบุรี", storageClass: "Storage Class 3A", storage: 17000, usage: 58000 },
+                { province: "ชลบุรี", cas: "110-30-5", name: "เอทิลีน บิสเตียราไมด์ (EBS)", factory: "บจก. โพลีเมอร์ชลบุรี", storageClass: "Storage Class 4.1B", storage: 6000, usage: 24000 },
+
+                // Bangkok Data
+                { province: "กรุงเทพ", cas: "67-63-0", name: "ไอโซโพรพิลแอลกอฮอล์ (Isopropyl Alcohol)", factory: "บริษัท เคมีโรงพิมพ์พระนคร จำกัด", storageClass: "Storage Class 3A", storage: 15000, usage: 95000 },
+                { province: "กรุงเทพ", cas: "7681-52-9", name: "โซเดียมไฮโปคลอไรต์ (Sodium Hypochlorite)", factory: "บจก. บำบัดน้ำมหานคร", storageClass: "Storage Class 8B", storage: 28000, usage: 110000 },
+                { province: "กรุงเทพ", cas: "108-88-3", name: "โทลูอีน (Toluene)", factory: "บจก. เคมีภัณฑ์อุตสาหกรรมลาดกระบัง", storageClass: "Storage Class 3A", storage: 12000, usage: 78000 },
+                { province: "กรุงเทพ", cas: "64-17-5", name: "เอทานอล (Ethanol)", factory: "บริษัท โกดังแอลกอฮอล์บางซื่อ", storageClass: "Storage Class 3A", storage: 45000, usage: 230000 },
+                { province: "กรุงเทพ", cas: "7664-41-7", name: "แอมโมเนียแอนไฮดรัส (ammonia anhydrous)", factory: "คลังเย็นบางนาอินเตอร์เนชั่นแนล", storageClass: "Storage Class 2A", storage: 8500, usage: 38000 },
+                { province: "กรุงเทพ", cas: "7647-01-0", name: "กรดไฮโดรคลอริก (Hydrochloric Acid)", factory: "บจก. โลหะกิจเจริญ กรุงเทพฯ", storageClass: "Storage Class 8B", storage: 19000, usage: 64000 }
+            ];
+
+            allChemicalData = demoChemicals;
+
+            // Update UI status badges for demonstration
+            const provinces = ["rayong", "chachoengsao", "chonburi", "bangkok"];
+            provinces.forEach(p => {
+                const provName = p === "rayong" ? "ระยอง" : (p === "chachoengsao" ? "ฉะเชิงเทรา" : (p === "chonburi" ? "ชลบุรี" : "กรุงเทพ"));
+                const count = allChemicalData.filter(d => d.province === provName).length;
+                const statusCard = document.getElementById(`status-${p}`);
+                statusCard.querySelector('.status-text').textContent = `ข้อมูลจำลองสำเร็จ (${count} รายการ)`;
+                statusCard.querySelector('.status-text').className = "text-xs text-emerald-600 status-text font-medium font-sans";
+                statusCard.querySelector('.status-icon').className = "p-2.5 rounded-lg bg-emerald-50 text-emerald-600 status-icon";
+                statusCard.querySelector('.status-badge').textContent = "Demo loaded";
+                statusCard.querySelector('.status-badge').className = "status-badge px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800";
+            });
+
+            filterAndRender();
+        }
+
+        // 3. Central Processing Filtering & KPI Calculations
+        function filterAndRender() {
+            // Apply province filter
+            if (currentProvinceFilter === "all") {
+                // EXCLUDE Bangkok from overall EEC "all" category as requested
+                filteredChemicalData = allChemicalData.filter(item => item.province !== "กรุงเทพ");
+            } else {
+                filteredChemicalData = allChemicalData.filter(item => item.province === currentProvinceFilter);
+            }
+
+            // Apply search filter if active
+            const searchKeyword = document.getElementById('tableSearchInput').value.trim().toLowerCase();
+            if (searchKeyword) {
+                filteredChemicalData = filteredChemicalData.filter(item => 
+                    item.name.toLowerCase().includes(searchKeyword) ||
+                    item.cas.toLowerCase().includes(searchKeyword) ||
+                    item.factory.toLowerCase().includes(searchKeyword) ||
+                    item.storageClass.toLowerCase().includes(searchKeyword)
+                );
+            }
+
+            // Calculate & Update KPIs
+            updateKPIs();
+
+            // Run Area Overall Comparisons (Mixture totals vs CAS singles)
+            updateProvinceComparisons();
+
+            // Run Ammonia Anhydrous Custom Focus Analysis (CAS: 7664-41-7)
+            runAmmoniaFocusAnalysis();
+
+            // Run Flammable Focus Analysis (Storage Class 4.1A, 4.1B, 3A, 3B)
+            runFlammableFocusAnalysis();
+
+            // Run Dashboard Analyses
+            runTopStorageCasAnalysis();
+            runTopUsageCasAnalysis();
+            runTopStorageClassAnalysis();
+            runTopUsageClassAnalysis();
+
+            // Render detailed datatable
+            renderTable();
+        }
+
+        function updateKPIs() {
+            const totalItems = filteredChemicalData.length;
+            
+            // Unique CAS count
+            const uniqueCasSet = new Set(filteredChemicalData.map(item => item.cas));
+            const uniqueCasCount = uniqueCasSet.size;
+
+            // Accumulate storage and usage
+            let totalStorage = 0;
+            let totalUsage = 0;
+
+            filteredChemicalData.forEach(item => {
+                totalStorage += item.storage;
+                totalUsage += item.usage;
+            });
+
+            document.getElementById('kpi-total-items').textContent = totalItems.toLocaleString();
+            document.getElementById('kpi-unique-cas').textContent = uniqueCasCount.toLocaleString();
+            document.getElementById('kpi-total-storage').textContent = totalStorage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('kpi-total-usage').textContent = totalUsage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Function to update the province level single vs mixture comparison cards
+        function updateProvinceComparisons() {
+            const provKeys = ["ระยอง", "ชลบุรี", "ฉะเชิงเทรา", "กรุงเทพ"];
+            const elementsMapping = {
+                "ระยอง": {
+                    itemsId: "comp-rayong-items", itemsPctId: "comp-rayong-items-pct", itemsBarId: "comp-rayong-items-bar",
+                    storageId: "comp-rayong-storage", storagePctId: "comp-rayong-storage-pct", storageBarId: "comp-rayong-storage-bar",
+                    usageId: "comp-rayong-usage", usagePctId: "comp-rayong-usage-pct", usageBarId: "comp-rayong-usage-bar"
+                },
+                "ชลบุรี": {
+                    itemsId: "comp-chonburi-items", itemsPctId: "comp-chonburi-items-pct", itemsBarId: "comp-chonburi-items-bar",
+                    storageId: "comp-chonburi-storage", storagePctId: "comp-chonburi-storage-pct", storageBarId: "comp-chonburi-storage-bar",
+                    usageId: "comp-chonburi-usage", usagePctId: "comp-chonburi-usage-pct", usageBarId: "comp-chonburi-usage-bar"
+                },
+                "ฉะเชิงเทรา": {
+                    itemsId: "comp-chachoengsao-items", itemsPctId: "comp-chachoengsao-items-pct", itemsBarId: "comp-chachoengsao-items-bar",
+                    storageId: "comp-chachoengsao-storage", storagePctId: "comp-chachoengsao-storage-pct", storageBarId: "comp-chachoengsao-storage-bar",
+                    usageId: "comp-chachoengsao-usage", usagePctId: "comp-chachoengsao-usage-pct", usageBarId: "comp-chachoengsao-usage-bar"
+                },
+                "กรุงเทพ": {
+                    itemsId: "comp-bangkok-items", itemsPctId: "comp-bangkok-items-pct", itemsBarId: "comp-bangkok-items-bar",
+                    storageId: "comp-bangkok-storage", storagePctId: "comp-bangkok-storage-pct", storageBarId: "comp-bangkok-storage-bar",
+                    usageId: "comp-bangkok-usage", usagePctId: "comp-bangkok-usage-pct", usageBarId: "comp-bangkok-usage-bar"
+                }
+            };
+
+            provKeys.forEach(prov => {
+                const uiMap = elementsMapping[prov];
+                const totals = TOTALS_PROV_METRICS[prov];
+
+                // Calculate single substance metrics for this province from imported allChemicalData
+                const singleData = allChemicalData.filter(item => item.province === prov);
+                const singleItemsCount = singleData.length;
+                
+                let singleStorageSum = 0;
+                let singleUsageSum = 0;
+                singleData.forEach(item => {
+                    singleStorageSum += item.storage;
+                    singleUsageSum += item.usage;
+                });
+
+                // Compute ratios
+                const itemsRatio = totals.items > 0 ? (singleItemsCount / totals.items) * 100 : 0;
+                const storageRatio = totals.storage > 0 ? (singleStorageSum / totals.storage) * 100 : 0;
+                const usageRatio = totals.usage > 0 ? (singleUsageSum / totals.usage) * 100 : 0;
+
+                // Update UI Labels
+                document.getElementById(uiMap.itemsId).textContent = `${singleItemsCount.toLocaleString()} / ${totals.items.toLocaleString()}`;
+                document.getElementById(uiMap.itemsPctId).textContent = `${itemsRatio.toFixed(3)}%`;
+                document.getElementById(uiMap.itemsBarId).style.width = Math.min(itemsRatio * 10, 100) + "%"; 
+
+                // Format storage values dynamically for easier reading
+                const displaySingleStorage = formatShorthandValue(singleStorageSum);
+                const displayTotalStorage = formatShorthandValue(totals.storage);
+                document.getElementById(uiMap.storageId).textContent = `${displaySingleStorage} / ${displayTotalStorage}`;
+                document.getElementById(uiMap.storagePctId).textContent = `${storageRatio.toFixed(4)}%`;
+                document.getElementById(uiMap.storageBarId).style.width = Math.min(storageRatio * 10, 100) + "%";
+
+                // Format usage values
+                const displaySingleUsage = formatShorthandValue(singleUsageSum);
+                const displayTotalUsage = formatShorthandValue(totals.usage);
+                document.getElementById(uiMap.usageId).textContent = `${displaySingleUsage} / ${displayTotalUsage}`;
+                document.getElementById(uiMap.usagePctId).textContent = `${usageRatio.toFixed(3)}%`;
+                document.getElementById(uiMap.usageBarId).style.width = Math.min(usageRatio, 100) + "%";
+            });
+        }
+
+        // Helper to format large numbers to short text (e.g. 1.25B, 4.3M)
+        function formatShorthandValue(value) {
+            if (value >= 1000000000) {
+                return (value / 1000000000).toFixed(2) + " พันล้านตัน";
+            }
+            if (value >= 1000000) {
+                return (value / 1000000).toFixed(2) + " ล้านตัน";
+            }
+            return value.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ตัน";
+        }
+
+        // Safe chart builder helper
+        function buildChart(chartId, config) {
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+            }
+            const ctx = document.getElementById(chartId).getContext('2d');
+            chartInstances[chartId] = new Chart(ctx, config);
+        }
+
+        // SPECIAL ANALYTIC 1: Ammonia Anhydrous (CAS: 7664-41-7) Focus Analysis
+        function runAmmoniaFocusAnalysis() {
+            const ammoniaCas = "7664-41-7";
+            
+            let totalStorageAll = 0;
+            let totalUsageAll = 0;
+            let ammoniaStorage = 0;
+            let ammoniaUsage = 0;
+
+            filteredChemicalData.forEach(item => {
+                totalStorageAll += item.storage;
+                totalUsageAll += item.usage;
+                if (item.cas === ammoniaCas) {
+                    ammoniaStorage += item.storage;
+                    ammoniaUsage += item.usage;
+                }
+            });
+
+            // Calculate Percentages
+            const storagePct = totalStorageAll > 0 ? (ammoniaStorage / totalStorageAll) * 100 : 0;
+            const usagePct = totalUsageAll > 0 ? (ammoniaUsage / totalUsageAll) * 100 : 0;
+
+            // Update UI Labels
+            document.getElementById('amm-storage-val').textContent = ammoniaStorage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('amm-storage-total').textContent = totalStorageAll.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('amm-storage-pct').textContent = storagePct.toFixed(2) + "%";
+            document.getElementById('amm-storage-bar').style.width = Math.min(storagePct, 100) + "%";
+
+            document.getElementById('amm-usage-val').textContent = ammoniaUsage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('amm-usage-total').textContent = totalUsageAll.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('amm-usage-pct').textContent = usagePct.toFixed(2) + "%";
+            document.getElementById('amm-usage-bar').style.width = Math.min(usagePct, 100) + "%";
+
+            // Draw Ammonia proportion Donut chart
+            const remainingStorage = Math.max(0, totalStorageAll - ammoniaStorage);
+            const remainingUsage = Math.max(0, totalUsageAll - ammoniaUsage);
+
+            buildChart('chartAmmoniaProportion', {
+                type: 'doughnut',
+                data: {
+                    labels: ['แอมโมเนีย (จัดเก็บ)', 'สารเดี่ยวอื่น (จัดเก็บ)', 'แอมโมเนีย (การใช้)', 'สารเดี่ยวอื่น (การใช้)'],
+                    datasets: [
+                        {
+                            label: 'สัดส่วนจัดเก็บสูงสุด (ตัน)',
+                            data: [ammoniaStorage, remainingStorage],
+                            backgroundColor: ['#2563eb', '#e2e8f0'],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            weight: 2
+                        },
+                        {
+                            label: 'สัดส่วนปริมาณการใช้ (ตัน)',
+                            data: [ammoniaUsage, remainingUsage],
+                            backgroundColor: ['#059669', '#cbd5e1'],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            weight: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Prompt', size: 9 },
+                                boxWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                    return ` ${context.label}: ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '50%'
+                }
+            });
+        }
+
+        // SPECIAL ANALYTIC 2: Flammable Chemicals (Storage Class 4.1A, 4.1B, 3A, 3B) Focus Analysis
+        function runFlammableFocusAnalysis() {
+            // Target classes
+            const targetClasses = ["4.1A", "4.1B", "3A", "3B", "storage class 4.1a", "storage class 4.1b", "storage class 3a", "storage class 3b"];
+            
+            let totalStorageAll = 0;
+            let totalUsageAll = 0;
+            let flammableStorage = 0;
+            let flammableUsage = 0;
+
+            filteredChemicalData.forEach(item => {
+                totalStorageAll += item.storage;
+                totalUsageAll += item.usage;
+
+                // Clean string to check (e.g. "Storage Class 3A" -> "3A")
+                const cleanedClass = (item.storageClass || '').toLowerCase().replace('storage class', '').trim();
+                const matched = targetClasses.some(tc => {
+                    const cleanTC = tc.toLowerCase().replace('storage class', '').trim();
+                    return cleanedClass === cleanTC;
+                });
+
+                if (matched) {
+                    flammableStorage += item.storage;
+                    flammableUsage += item.usage;
+                }
+            });
+
+            // Calculate Percentages
+            const storagePct = totalStorageAll > 0 ? (flammableStorage / totalStorageAll) * 100 : 0;
+            const usagePct = totalUsageAll > 0 ? (flammableUsage / totalUsageAll) * 100 : 0;
+
+            // Update UI Labels
+            document.getElementById('flam-storage-val').textContent = flammableStorage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('flam-storage-total').textContent = totalStorageAll.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('flam-storage-pct').textContent = storagePct.toFixed(2) + "%";
+            document.getElementById('flam-storage-bar').style.width = Math.min(storagePct, 100) + "%";
+
+            document.getElementById('flam-usage-val').textContent = flammableUsage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('flam-usage-total').textContent = totalUsageAll.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('flam-usage-pct').textContent = usagePct.toFixed(2) + "%";
+            document.getElementById('flam-usage-bar').style.width = Math.min(usagePct, 100) + "%";
+
+            // Draw Flammable proportion Donut chart
+            const remainingStorage = Math.max(0, totalStorageAll - flammableStorage);
+            const remainingUsage = Math.max(0, totalUsageAll - flammableUsage);
+
+            buildChart('chartFlammableProportion', {
+                type: 'doughnut',
+                data: {
+                    labels: ['สารไวไฟ (จัดเก็บ)', 'สารเดี่ยวอื่น (จัดเก็บ)', 'สารไวไฟ (การใช้)', 'สารเดี่ยวอื่น (การใช้)'],
+                    datasets: [
+                        {
+                            label: 'สัดส่วนจัดเก็บสูงสุด (ตัน)',
+                            data: [flammableStorage, remainingStorage],
+                            backgroundColor: ['#f59e0b', '#f1f5f9'],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            weight: 2
+                        },
+                        {
+                            label: 'สัดส่วนปริมาณการใช้ (ตัน)',
+                            data: [flammableUsage, remainingUsage],
+                            backgroundColor: ['#e11d48', '#e2e8f0'],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            weight: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Prompt', size: 9 },
+                                boxWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                    return ` ${context.label}: ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '50%'
+                }
+            });
+        }
+
+        // Dashboard Item 1: TOP 10 ปริมาณการจัดเก็บสูงสุดต่อปี โดยพิจารณาผลรวมจาก CAS No.
+        function runTopStorageCasAnalysis() {
+            const mapCasToValue = {};
+            const mapCasToName = {};
+
+            filteredChemicalData.forEach(item => {
+                const key = item.cas;
+                mapCasToValue[key] = (mapCasToValue[key] || 0) + item.storage;
+                if (!mapCasToName[key] || mapCasToName[key].length < item.name.length) {
+                    mapCasToName[key] = item.name;
+                }
+            });
+
+            const sortedCasList = Object.keys(mapCasToValue).map(key => ({
+                cas: key,
+                name: mapCasToName[key],
+                value: mapCasToValue[key]
+            })).sort((a, b) => b.value - a.value);
+
+            const top10 = sortedCasList.slice(0, 10);
+
+            const labels = top10.map(item => `${item.cas}\n(${item.name.substring(0, 20)}${item.name.length > 20 ? '...' : ''})`);
+            const dataValues = top10.map(item => item.value);
+
+            buildChart('chartTopStorageCas', {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ปริมาณจัดเก็บรวมสูงสุด (ตัน)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dashboard Item 2: TOP 10 ปริมาณการใช้ต่อปี โดยพิจารณาผลรวมจาก CAS No.
+        function runTopUsageCasAnalysis() {
+            const mapCasToValue = {};
+            const mapCasToName = {};
+
+            filteredChemicalData.forEach(item => {
+                const key = item.cas;
+                mapCasToValue[key] = (mapCasToValue[key] || 0) + item.usage;
+                if (!mapCasToName[key] || mapCasToName[key].length < item.name.length) {
+                    mapCasToName[key] = item.name;
+                }
+            });
+
+            const sortedCasList = Object.keys(mapCasToValue).map(key => ({
+                cas: key,
+                name: mapCasToName[key],
+                value: mapCasToValue[key]
+            })).sort((a, b) => b.value - a.value);
+
+            const top10 = sortedCasList.slice(0, 10);
+
+            const labels = top10.map(item => `${item.cas}\n(${item.name.substring(0, 20)}${item.name.length > 20 ? '...' : ''})`);
+            const dataValues = top10.map(item => item.value);
+
+            buildChart('chartTopUsageCas', {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ปริมาณการใช้รวมสูงสุด (ตัน)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                        borderColor: 'rgb(5, 150, 105)',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dashboard Item 3: TOP 10 Storage Class ปริมาณการจัดเก็บสูงสุดต่อปี
+        function runTopStorageClassAnalysis() {
+            const mapClassToValue = {};
+
+            filteredChemicalData.forEach(item => {
+                const key = item.storageClass || 'Unknown Class';
+                mapClassToValue[key] = (mapClassToValue[key] || 0) + item.storage;
+            });
+
+            const sortedClassList = Object.keys(mapClassToValue).map(key => ({
+                className: key,
+                value: mapClassToValue[key]
+            })).sort((a, b) => b.value - a.value);
+
+            const top10 = sortedClassList.slice(0, 10);
+
+            const labels = top10.map(item => item.className);
+            const dataValues = top10.map(item => item.value);
+
+            buildChart('chartTopStorageClass', {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ปริมาณจัดเก็บสูงสุดตามกลุ่ม Storage Class (ตัน)',
+                        data: dataValues,
+                        backgroundColor: [
+                            'rgba(147, 51, 234, 0.8)',
+                            'rgba(124, 58, 237, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(79, 70, 229, 0.8)',
+                            'rgba(67, 56, 202, 0.8)',
+                            'rgba(55, 48, 163, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(167, 139, 250, 0.8)',
+                            'rgba(196, 181, 253, 0.8)',
+                            'rgba(224, 231, 255, 0.8)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        },
+                        x: {
+                            ticks: { font: { family: 'Prompt', size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dashboard Item 4: TOP 10 Storage Class ปริมาณการใช้ต่อปี
+        function runTopUsageClassAnalysis() {
+            const mapClassToValue = {};
+
+            filteredChemicalData.forEach(item => {
+                const key = item.storageClass || 'Unknown Class';
+                mapClassToValue[key] = (mapClassToValue[key] || 0) + item.usage;
+            });
+
+            const sortedClassList = Object.keys(mapClassToValue).map(key => ({
+                className: key,
+                value: mapClassToValue[key]
+            })).sort((a, b) => b.value - a.value);
+
+            const top10 = sortedClassList.slice(0, 10);
+
+            const labels = top10.map(item => item.className);
+            const dataValues = top10.map(item => item.value);
+
+            buildChart('chartTopUsageClass', {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ปริมาณการใช้ตามกลุ่ม Storage Class (ตัน)',
+                        data: dataValues,
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(217, 119, 6, 0.8)',
+                            'rgba(180, 83, 9, 0.8)',
+                            'rgba(146, 64, 14, 0.8)',
+                            'rgba(120, 53, 4, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(252, 211, 77, 0.8)',
+                            'rgba(253, 230, 138, 0.8)',
+                            'rgba(254, 243, 199, 0.8)',
+                            'rgba(255, 251, 235, 0.8)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw.toLocaleString(undefined, { maximumFractionDigits: 2 })} ตัน`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Prompt', size: 10 } }
+                        },
+                        x: {
+                            ticks: { font: { family: 'Prompt', size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. Data Table Rendering Engine & Pagination helper
+        function renderTable() {
+            const tbody = document.getElementById('chemicalTableBody');
+            tbody.innerHTML = '';
+
+            const totalItems = filteredChemicalData.length;
+            if (totalItems === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-10 text-center text-slate-400">
+                            ไม่พบข้อมูลสารเคมีที่ค้นหาหรือไม่มีข้อมูลนำเข้าในหมวดหมู่นี้
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('tablePageIndicator').textContent = "แสดงผล 0 - 0 จาก 0 รายการ";
+                document.getElementById('btnPrevPage').disabled = true;
+                document.getElementById('btnNextPage').disabled = true;
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (tableCurrentPage > totalPages) tableCurrentPage = totalPages;
+
+            const startIndex = (tableCurrentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+            const pageItems = filteredChemicalData.slice(startIndex, endIndex);
+
+            pageItems.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+
+                // Badges rendering
+                let provinceBadgeColor = "bg-slate-100 text-slate-700";
+                if (item.province === "ระยอง") provinceBadgeColor = "bg-blue-50 text-blue-700 border border-blue-100";
+                else if (item.province === "ฉะเชิงเทรา") provinceBadgeColor = "bg-indigo-50 text-indigo-700 border border-indigo-100";
+                else if (item.province === "ชลบุรี") provinceBadgeColor = "bg-amber-50 text-amber-700 border border-amber-100";
+                else if (item.province === "กรุงเทพ") provinceBadgeColor = "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-100";
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${provinceBadgeColor}">${item.province}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-900">${item.cas}</td>
+                    <td class="px-6 py-4 max-w-xs truncate font-medium text-slate-800" title="${item.name}">${item.name}</td>
+                    <td class="px-6 py-4 max-w-xs truncate text-slate-500" title="${item.factory}">${item.factory}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-mono text-slate-600">${item.storageClass}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right font-semibold text-slate-900">${item.storage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right font-semibold text-slate-900">${item.usage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update UI components
+            document.getElementById('tablePageIndicator').textContent = `แสดงผล ${startIndex + 1} - ${endIndex} จาก ${totalItems.toLocaleString()} รายการ`;
+            document.getElementById('btnPrevPage').disabled = tableCurrentPage === 1;
+            document.getElementById('btnNextPage').disabled = tableCurrentPage === totalPages;
+        }
+
+    </script>
+</body>
+</html>
